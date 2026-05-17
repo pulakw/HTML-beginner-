@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Myntra Clone | Advanced Engineering Frontend Build</title>
+    <style>
+        /* ==========================================================================
+           1. ARCHITECTURAL DESIGN TOKENS (CSS VARIABLES)
+           ========================================================================== */
+        :root {
+            --brand-primary: #ff3f6c;
+            --brand-primary-hover: #e6355f;
+            --text-main: #282c3f;
+            --text-muted: #535766;
+            --text-light: #7e818c;
+            --bg-body: #f5f5f6;
+            --bg-card: #ffffff;
+            --bg-search: #f5f5f6;
+            --border-color: #eaeaec;
+            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 12px 25px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --font-stack: 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* ==========================================================================
+           2. GLOBAL RESET & BASE STYLES
+           ========================================================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: #ffffff;
+            color: var(--text-main);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Modern Custom Scrollbar Engineering */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ffffff;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d4d5d9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-light);
+        }
+
+        /* ==========================================================================
+           3. UTILITY COMPONENTS (TOP TICKER & HEADER)
+           ========================================================================== */
+        .ticker {
+            background: linear-gradient(90deg, #282c3f, #3e4152);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+            padding: 10px 0;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .ticker__highlight {
+            color: var(--brand-primary);
+            animation: pulse 1.5s infinite;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4%;
+            height: 80px;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            background-color: #ffffff;
+            z-index: 2000;
+        }
+
+        .header__logo-link {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--brand-primary);
+            text-transform: uppercase;
+            text-decoration: none;
+            letter-spacing: 1.5px;
+        }
+
+        /* ==========================================================================
+           4. COMPLEX FEATURE: MEGA DROPDOWN MENU NAVIGATION
+           ========================================================================== */
+        .nav {
+            height: 100%;
+        }
+        .nav__list {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+            height: 100%;
+            align-items: center;
+        }
+        .nav__item {
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+        .nav__link {
+            text-decoration: none;
+            color: var(--text-main);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            border-bottom: 4px solid transparent;
+            transition: var(--transition-smooth);
+        }
+        .nav__item:hover .nav__link {
+            border-bottom-color: var(--brand-primary);
+            color: var(--brand-primary);
+        }
+
+        /* Mega Menu Core Layout Engine */
+        .mega-menu {
+            position: absolute;
+            top: 80px;
+            left: 0;
+            width: 100%;
+            background-color: #ffffff;
+            box-shadow: var(--shadow-md);
+            padding: 30px 6%;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(15px);
+            transition: var(--transition-smooth);
+            z-index: 1500;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .nav__item:hover .mega-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .mega-menu__column-title {
+            font-size: 12px;
+            color: var(--brand-primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+        .mega-menu__list {
+            list-style: none;
+        }
+        .mega-menu__link {
+            display: block;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            padding: 5px 0;
+            transition: color 0.2s ease;
+        }
+        .mega-menu__link:hover {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        /* ==========================================================================
+           5. COMPLEX FEATURE: SEARCH INTERACTION BOX
+           ========================================================================== */
+        .search-wrapper {
+            position: relative;
+            width: 32%;
+        }
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-search);
+            padding: 10px 15px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            transition: var(--transition-smooth);
+        }
+        .search-bar:focus-within {
+            background-color: #ffffff;
+            border-color: var(--border-color);
+            box-shadow: 0 0 8px rgba(0,0,0,0.05);
+        }
+        .search-bar__input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            outline: none;
+            font-size: 13px;
+            color: var(--text-main);
+        }
+        
+        /* Dropdown Search Box Display Engine via focus states */
+        .search-suggestions {
+            position: absolute;
+            top: 48px;
+            left: 0;
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 4px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: var(--transition-smooth);
+            z-index: 1800;
+        }
+        .search-bar__input:focus + .search-suggestions,
+        .search-suggestions:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .search-suggestions__title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .search-suggestions__item {
+            padding: 8px 0;
+            font-size: 13px;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .search-suggestions__item:hover {
+            color: var(--brand-primary);
+            padding-left: 5px;
+            transition: all 0.2s ease;
+        }
+
+        /* User Profile Actions */
+        .actions {
+            display: flex;
+            gap: 25px;
+        }
+        .actions__item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+        .actions__icon {
+            font-size: 18px;
+            margin-bottom: 3px;
+            transition: var(--transition-smooth);
+        }
+        .actions__item:hover .actions__icon {
+            transform: translateY(-2px);
+            color: var(--brand-primary);
+        }
+
+        /* ==========================================================================
+           6. HERO FEED CAROUSEL TILE SYSTEM (FLEX/GRID METRICS)
+           ========================================================================== */
+        .dashboard-feed {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr;
+            gap: 20px;
+            padding: 25px 4%;
+        }
+        .carousel-view {
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+        .carousel-view img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .promo-tile {
+            background: linear-gradient(135deg, #fff3f6 0%, #ffe5ec 100%);
+            border: 1px solid rgba(255, 63, 108, 0.15);
+            border-radius: 8px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .promo-tile__tag {
+            background-color: var(--brand-primary);
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 20px;
+            width: max-content;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+        .promo-tile__heading {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+        .promo-tile__sub {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        .promo-tile__btn {
+            background-color: var(--text-main);
+            color: #ffffff;
+            border: none;
+            padding: 12px 25px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: max-content;
+            transition: var(--transition-smooth);
+        }
+        .promo-tile__btn:hover {
+            background-color: var(--brand-primary);
+            transform: translateX(4px);
+        }
+
+        /* Section Layout */
+        .section-headline {
+            font-size: 22px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 40px 0 25px 4%;
+            font-weight: 700;
+            color: #3e4152;
+            position: relative;
+        }
+        .section-headline::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--brand-primary);
+        }
+
+        /* ==========================================================================
+           7. WEB DISPLAY SYSTEM: ADVANCED INTERACTION PRODUCT CARDS
+           ========================================================================== */
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            padding: 0 4% 60px 4%;
+        }
+        .item-card {
+            background-color: var(--bg-card);
+            border-radius: 6px;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+            position: relative;
+        }
+        .item-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .item-card__media-box {
+            width: 100%;
+            height: 340px;
+            position: relative;
+            overflow: hidden;
+            background-color: #f9f9f9;
+        }
+        .item-card__img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .item-card:hover .item-card__img {
+            transform: scale(1.06);
+        }
+
+        .item-card__rating {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 20px;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Wishlist Trigger Module */
+        .item-card__wishlist {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ffffff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            font-size: 16px;
+            z-index: 15;
+            transition: var(--transition-smooth);
+        }
+        .item-card__wishlist:hover {
+            color: #ffffff;
+            background-color: var(--brand-primary);
+            transform: scale(1.1) rotate(15deg);
+        }
+
+        /* Overlay Engine sliding up on wrapper focus */
+        .item-card__action-panel {
+            position: absolute;
+            bottom: -85px;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 15px;
+            transition: bottom 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 20;
+            border-top: 1px solid var(--border-color);
+        }
+        .item-card:hover .item-card__action-panel {
+            bottom: 0;
+        }
+
+        .item-card__size-label {
+            font-size: 11px;
+            color: var(--text-light);
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .item-card__size-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .item-card__size-dot {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #d4d5d9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .item-card__size-dot:hover {
+            border-color: var(--brand-primary);
+            color: var(--brand-primary);
+            background-color: #fff3f6;
+        }
+
+        .item-card__cta-btn {
+            width: 100%;
+            background-color: var(--brand-primary);
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .item-card__cta-btn:hover {
+            background-color: var(--brand-primary-hover);
+        }
+
+        /* Information Body */
+        .item-card__details {
+            padding: 15px 5px;
+        }
+        .item-card__brand {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 3px;
+        }
+        .item-card__name {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .item-card__pricing {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        .item-card__price-current {
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .item-card__price-old {
+            text-decoration: line-through;
+            color: var(--text-light);
+            font-size: 11px;
+        }
+        .item-card__discount {
+            color: #ff905a;
+            font-weight: 700;
+            font-size: 11px;
+        }
+
+        /* ==========================================================================
+           8. ANIMATION KEYFRAMES
+           ========================================================================== */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ticker">
+        🔥 E-Commerce Sandbox Environment Live | Use Promo Code <span class="ticker__highlight">BTECHIT2026</span> for 20% off System Architecture Build!
+    </div>
+
+    <header class="header">
+        <a href="#" class="header__logo-link">Myntra</a>
+
+        <nav class="nav">
+            <ul class="nav__list">
+                <li class="nav__item">
+                    <a href="#" class="nav__link">Men</a>
+                    <div class="mega-menu">
+                        <div>
+                            <h4 class="mega-menu__column-title">Topwear</h4>
+                            <ul class="mega-menu__list">
+                                <li><a href="#" class="mega-menu__link">T-Shirts</a></li>
+                                <li><a href="#" class="mega-menu__link">Casual Shirts</a></li>
+                                <li><a href="#" class="mega-menu__link">Formal Shirts</a></li>
+                                <li><a href="#" class="mega-menu__link">Sweaters</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="mega-menu__column-title">Bottomwear</h4>
+                            <ul class="mega-menu__list">
+                                <li><a href="#" class="mega-menu__link">Jeans</a></li>
+                                <li><a href="#" class="mega-menu__link">Casual Trousers</a></li>
+                                <li><a href="#" class="mega-menu__link">Shorts</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="mega-menu__column-title">Footwear</h4>
+                            <ul class="mega-menu__list">
+                                <li><a href="#" class="mega-menu__link">Sports Shoes</a></li>
+                                <li><a href="#" class="mega-menu__link">Sneakers</a></li>
+                                <li><a href="#" class="mega-menu__link">Formal Shoes</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav__item">
+                    <a href="#" class="nav__link">Women</a>
+                    <div class="mega-menu">
+                        <div>
+                            <h4 class="mega-menu__column-title">Indian Wear</h4>
+                            <ul class="mega-menu__list">
+                                <li><a href="#" class="mega-menu__link">Kurtas & Suits</a></li>
+                                <li><a href="#" class="mega-menu__link">Sarees</a></li>
+                                <li><a href="#" class="mega-menu__link">Lehengas</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="mega-menu__column-title">Western Wear</h4>
+                            <ul class="mega-menu__list">
+                                <li><a href="#" class="mega-menu__link">Dresses</a></li>
+                                <li><a href="#" class="mega-menu__link">Tops & Tees</a></li>
+                                <li><a href="#" class="mega-menu__link">Jeans</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav__item"><a href="#" class="nav__link">Kids</a></li>
+                <li class="nav__item"><a href="#" class="nav__link">Studio</a></li>
+            </ul>
+        </nav>
+
+        <div class="search-wrapper">
+            <div class="search-bar">
+                <input class="search-bar__input" type="text" placeholder="Search across thousands of indexed products...">
+                <div class="search-suggestions">
+                    <h5 class="search-suggestions__title">Trending Searches</h5>
+                    <div class="search-suggestions__item">Nike Air Max Premium</div>
+                    <div class="search-suggestions__item">Oversized Hoodies</div>
+                    <div class="search-suggestions__item">Roadster Casual Linens</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <div class="actions__item"><span class="actions__icon">👤</span>Profile</div>
+            <div class="actions__item"><span class="actions__icon">❤️</span>Wishlist</div>
+            <div class="actions__item"><span class="actions__icon">🛍️</span>Bag</div>
+        </div>
+    </header>
+
+    <main class="dashboard-feed">
+        <div class="carousel-view">
+            <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80" alt="Tech Fashion Feed Showcase">
+        </div>
+        <div class="promo-tile">
+            <span class="promo-tile__tag">BTech Sandbox Edition</span>
+            <h3 class="promo-tile__heading">Curated Just For You</h3>
+            <p class="promo-tile__sub">Dynamic style feeds configured by automated front-end layout arrays.</p>
+            <button class="promo-tile__btn">Explore Feed →</button>
+        </div>
+    </main>
+
+    <h3 class="section-headline">Trending Collections</h3>
+
+    <section class="catalog-grid">
+        
+        <div class="item-card">
+            <div class="item-card__media-box">
+                <div class="item-card__wishlist">♡</div>
+                <img class="item-card__img" src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80" alt="Nike Pro">
+                <div class="item-card__rating">4.5 ★ | 12.4k Reviews</div>
+                
+                <div class="item-card__action-panel">
+                    <h5 class="item-card__size-label">Select Size Metric</h5>
+                    <div class="item-card__size-row">
+                        <div class="item-card__size-dot">7</div>
+                        <div class="item-card__size-dot">8</div>
+                        <div class="item-card__size-dot">9</div>
+                        <div class="item-card__size-dot">10</div>
+                    </div>
+                    <button class="item-card__cta-btn">Move to Bag</button>
+                </div>
+            </div>
+            <div class="item-card__details">
+                <h4 class="item-card__brand">Nike Elite</h4>
+                <p class="item-card__name">Zoom Structure Active Running Shoes</p>
+                <div class="item-card__pricing">
+                    <span class="item-card__price-current">₹6,495</span>
+                    <span class="item-card__price-old">₹10,995</span>
+                    <span class="item-card__discount">(40% OFF)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="item-card">
+            <div class="item-card__media-box">
+                <div class="item-card__wishlist">♡</div>
+                <img class="item-card__img" src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=500&q=80" alt="Casual Shirt">
+                <div class="item-card__rating">4.2 ★ | 1.1k Reviews</div>
+                
+                <div class="item-card__action-panel">
+                    <h5 class="item-card__size-label">Select Size Metric</h5>
+                    <div class="item-card__size-row">
+                        <div class="item-card__size-dot">S</div>
+                        <div class="item-card__size-dot">M</div>
+                        <div class="item-card__size-dot">L</div>
+                        <div class="item-card__size-dot">XL</div>
+                    </div>
+                    <button class="item-card__cta-btn">Move to Bag</button>
+                </div>
+            </div>
+            <div class="item-card__details">
+                <h4 class="item-card__brand">Roadster Alternative</h4>
+                <p class="item-card__name">Breathable Pure Linen Casual Topwear</p>
+                <div class="item-card__pricing">
+                    <span class="item-card__price-current">₹1,249</span>
+                    <span class="item-card__price-old">₹2,499</span>
+                    <span class="item-card__discount">(50% OFF)</span>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+</body>
+</html>
